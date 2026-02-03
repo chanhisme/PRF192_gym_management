@@ -17,8 +17,8 @@ void displayMember(int i, struct memberProfile * members);
 void displaySortMenu();
 int inputMemberChoice();
 int inputSortChoice();
-void sortMemberByBirthYearYoung_to_old(struct memberProfile ** members, int total);
-void sortMemberByBirthYearOlder_to_young(struct memberProfile ** members, int total);
+void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total);
+void sortMemberByBirthYearOlder_to_young(struct memberProfile * members, int total);
 
 
 
@@ -46,10 +46,10 @@ int main(){
                 displaySortMenu();
                 sortChoice = inputSortChoice();
                 if(sortChoice ==1){
-                    sortMemberByBirthYearYoung_to_old(&members, total);
+                    sortMemberByBirthYearYoung_to_old(members, total);
                 }
                 else if(sortChoice == 2){
-                    sortMemberByBirthYearOlder_to_young(&members, total);
+                    sortMemberByBirthYearOlder_to_young(members, total);
                 }
                 else{
                     printf("***PLEASE select 1 or 2, try again!\n");
@@ -89,6 +89,8 @@ int main(){
 
 
 
+    free(members);
+    members = NULL;
 
     return 0;
 }
@@ -115,7 +117,7 @@ int inputSortChoice(){
 }
 int isValidId(char id[]) {
     char preFix[4] = "GYM";
-    if(strlen(id) > 10 || strlen(id) == 0){
+    if(strlen(id) >= 10 || strlen(id) == 0){
         return 0;
     }
     //hàm strncmp sẽ so sánh 2 string như 2 số theo bảng mã ascii
@@ -131,13 +133,15 @@ int isValidName(char *name) {
     int len = strlen(name);
 
     if(len == 0) return 0;
-    if(name[0] == ' ' || name[len - 1] == ' ') return 0;
-
-    for(int i = 0; i < len; i++){
+    if(name[0] == ' ' || name[len - 1] == ' ') {
+        return 0;
+    }
+    int i = 0;
+    for(; i < len; i++){
         char c = name[i];
         // Không cho 2 space liên tiếp
         //đồng thời check ko cho đầu và kết thúc chuỗi là 1 space
-        if(name[i] == ' ' && name[i + 1] == ' '){
+        if(i < len -1 && name[i] == ' ' && name[i + 1] == ' '){
             return 0;
         }
         if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
@@ -193,11 +197,12 @@ void displayMemberMenu(){
     printf("4. Search member\n");
 }
 void addMember(int size, int*total, struct memberProfile **members){
-    *members = realloc(*members, (*total +size) * sizeof(struct memberProfile));
-    if(*members == NULL){
+    struct memberProfile * tmp = realloc(*members, (*total +size) * sizeof(struct memberProfile));
+    if(tmp == NULL){
         printf("Memory allocation failed!\n");
         return;
     }
+    *members = tmp;
     for(int i = 0; i < size; i++){
         //tạo index mới trong mảng
         int idx = (*total) + i; 
@@ -207,16 +212,22 @@ void addMember(int size, int*total, struct memberProfile **members){
             printf("Enter the #%d member ID: ", idx+1);
             fgets(inputID, sizeof(inputID), stdin);
             inputID[strcspn(inputID, "\n")] = '\0';
+            if (!isValidId(inputID)) {
+                printf("Invalid ID format. Must start with GYM.\n");
+            }
+            else if (searchMemberById(inputID, *total, *members) != -1) {
+                printf("This ID already exists.\n");
+            }
         }
-        while(!isValidId(inputID));
+        while(!isValidId(inputID) || searchMemberById(inputID, *total, *members) != -1);
         strcpy((*members)[idx].memberId, inputID);
 
         char inputName[30];
         //kiểm tra tên
         do{
-        printf("Enter the name of #%d member: ", idx+1);
-        fgets(inputName, sizeof(inputName), stdin);
-        inputName[strcspn(inputName, "\n")] = '\0';
+            printf("Enter the name of #%d member: ", idx+1);
+            fgets(inputName, sizeof(inputName), stdin);
+            inputName[strcspn(inputName, "\n")] = '\0';
         }
         while(!isValidName(inputName));
         strcpy((*members)[idx].fullName, inputName);
@@ -237,34 +248,44 @@ void addMember(int size, int*total, struct memberProfile **members){
         }
     (*total) += size;
     }
-void sortMemberByBirthYearYoung_to_old(struct memberProfile ** members, int total){
-    int i =0;
-    for(; i < total - 1; i++){
-        int j = 0;
-        for(; j < total - 1 - i; j++){
-            if((*members)[j].birthYear < (*members)[j+1].birthYear){
-                struct memberProfile temp = (*members)[j];
-                (*members)[j] = (*members)[j+1];
-                (*members)[j+1] = temp;
+void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total){
+    if(total == 0 || members == NULL){
+        printf("It is a empty list\n");
+    }
+    else{
+        int i =0;
+        for(; i < total - 1; i++){
+            int j = 0;
+            for(; j < total - 1 - i; j++){
+                if(members[j].birthYear < members[j+1].birthYear){
+                    struct memberProfile temp = members[j];
+                    members[j] = members[j+1];
+                    members[j+1] = temp;
+                }
             }
         }
+        printf("Sort succesfully\n");
     }
-    printf("Sort succesfully\n");
 
 }
-void sortMemberByBirthYearOlder_to_young(struct memberProfile ** members, int total){
-    int i =0;
-    for(; i < total - 1; i++){
-        int j = 0;
-        for(; j < total - 1 - i; j++){
-            if((*members)[j+1].birthYear < (*members)[j].birthYear){
-                struct memberProfile temp = (*members)[j];
-                (*members)[j] = (*members)[j+1];
-                (*members)[j+1] = temp;
+void sortMemberByBirthYearOlder_to_young(struct memberProfile *members, int total){
+    if(total == 0 || members == NULL){
+        printf("It is a empty list\n");
+    }
+    else{
+        int i =0;
+        for(; i < total - 1; i++){
+            int j = 0;
+            for(; j < total - 1 - i; j++){
+                if(members[j+1].birthYear < members[j].birthYear){
+                    struct memberProfile temp = members[j];
+                    members[j] = members[j+1];
+                    members[j+1] = temp;
+                }
             }
         }
+        printf("Sort succesfully\n");
     }
-    printf("Sort succesfully\\n");
 }
 void displaySortMenu(){
     printf("=====SORT=====\n");
@@ -272,7 +293,7 @@ void displaySortMenu(){
     printf("2. Oldest to youngest\n");
 }
 void displayAllMember(int total, struct memberProfile*members){
-    if(total == 0){
+    if(total == 0 || members == NULL){
         printf("This list is empty");
     }
     else{
@@ -285,9 +306,6 @@ void displayAllMember(int total, struct memberProfile*members){
         }
     }
 }
-
-
-
 
 
 
