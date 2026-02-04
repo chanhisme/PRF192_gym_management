@@ -7,22 +7,39 @@ struct memberProfile{
     int birthYear;
     char memberType[30];
 };
+struct trainerProfile{
+    char trainerID[10];
+    char trainerName[30];
+    // char specialty[20];
+    // char assignedMemberId[10];
+    // double monthlyFee;
+};
+int numberOfTrainer = 10;
+struct trainerProfile trainerList[10] = {
+    {"T001", "An"},
+    {"T002", "Binh"}
+};
 void displayMenu();
 int inputChoice();
 void displayMemberMenu();
 void addMember(int size, int*total, struct memberProfile **members);
 void displayAllMember(int total, struct memberProfile*members);
 int searchMemberById(char findId[10], int total, struct memberProfile* members);
+int searchMemberByName(char findName[30], int total, struct memberProfile * members);
+int searchTrainerById(char findId[10], int size, struct trainerProfile trainerList[]);
 void displayMember(int i, struct memberProfile * members);
 void displaySortMenu();
 int inputMemberChoice();
 int inputSortChoice();
 void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total);
 void sortMemberByBirthYearOlder_to_young(struct memberProfile * members, int total);
-
-
-
-
+void displayFileMenu();
+int inputFileChoice();
+void displayTrainerMenu();
+int inputTrainerChoice();
+void displaySearchmenu();
+int inputSearchChoice();
+void displayTrainer(int idx, struct trainerProfile trainerList[]);
 int main(){
     int choice;
     int total = 0;
@@ -51,35 +68,95 @@ int main(){
                 else if(sortChoice == 2){
                     sortMemberByBirthYearOlder_to_young(members, total);
                 }
+                else if(sortChoice == 0){}
                 else{
                     printf("***PLEASE select 1 or 2, try again!\n");
                 }
 
             }
             else if(memberChoice == 4){
-                //Nhập id muốn tìm
-                char findId[10];
-                printf("Enter ID you want to find: ");
-                fgets(findId, sizeof(findId), stdin);
-                findId[strcspn(findId, "\n")] = '\0';
-                //Linear search với findId
-                int index = searchMemberById(findId, total, members);
-                if(index!= -1){
-                    displayMember(index, members);
+                int searchChoice;
+                displaySearchmenu();
+                searchChoice = inputSearchChoice();
+                if(searchChoice == 1){
+                    char findId[10];
+                    printf("Enter ID you want to find: ");
+                    fgets(findId, sizeof(findId), stdin);
+                    findId[strcspn(findId, "\n")] = '\0';
+                    //Linear search với findId
+                    int index = searchMemberById(findId, total, members);
+                    if(index!= -1){
+                        displayMember(index, members);
+                    }
+                    else{
+                        printf("This id is not exist\n");
+                    }
                 }
-                else{
-                    printf("This id is not exist\n");
+                else if(searchChoice == 2){
+                    char findName[30];
+                    printf("Enter the name you want to find: ");
+                    fgets(findName, sizeof(findName), stdin);
+                    findName[strcspn(findName, "\n")]= '\0';
+                    int index = searchMemberByName(findName, total, members);
+                    if(index != -1){
+                        displayMember(index, members);
+                    }
+                    else{
+                        printf("This name is not exist\n");
+                    }
                 }
                 
+            }
+            else if(memberChoice == 0){
+
             }
             else{
                 printf("***PLEASE choose 1 of options in menu, try again!\n");
             }
         
         }
-        
+        else if(choice == 2){
+            int trainerChoice;
+            displayTrainerMenu();
+            trainerChoice = inputTrainerChoice();
+            if(trainerChoice == 1){
+
+            }
+            else if(trainerChoice == 4){
+                int searchChoice;
+                displaySearchmenu();
+                searchChoice = inputSearchChoice();
+                if(searchChoice == 1){
+                    char findId[10];
+                    printf("Enter ID you want to find: ");
+                    fgets(findId, sizeof(findId), stdin);
+                    findId[strcspn(findId, "\n")] = '\0';
+                    int index = searchTrainerById(findId, numberOfTrainer, trainerList);
+                    if(index!= -1){
+                        displayTrainer(index, trainerList);
+                    }
+                    else{
+                        printf("This id is not exist\n");
+                    }
+                }
+            }
+            
+            
+        }
         else if(choice == 3){
             displayAllMember(total, members);
+        }
+        else if(choice == 4){
+            int fileChoice;
+            displayFileMenu();
+            fileChoice = inputFileChoice();
+            if(fileChoice == 1){
+
+            }
+            else if(fileChoice == 0){}
+            else{
+                printf("***PLEASE choose 1 of options in menu, try again!\n");
+            }
         }
     }while(choice != 0);
     
@@ -93,6 +170,13 @@ int main(){
     members = NULL;
 
     return 0;
+}
+int inputFileChoice(){
+    int fileChoice;
+    printf("Enter file choice: ");
+    scanf("%d", &fileChoice);
+    getchar();
+    return fileChoice;
 }
 int inputMemberChoice(){
     int memberChoice;
@@ -108,12 +192,26 @@ int inputChoice(){
     getchar();
     return choice;
 }
+int inputTrainerChoice(){
+    int trainerChoice;
+    printf("Enter your choice: ");
+    scanf("%d", &trainerChoice);
+    getchar();
+    return trainerChoice;
+}
 int inputSortChoice(){
     int sortChoice;
     printf("Enter your choice: ");
     scanf("%d", &sortChoice);
     getchar();
     return sortChoice;
+}
+int inputSearchChoice(){
+    int searchChoice;
+    printf("Enter your choice: ");
+    scanf("%d", &searchChoice);
+    getchar();
+    return searchChoice;
 }
 int isValidId(char id[]) {
     char preFix[4] = "GYM";
@@ -163,10 +261,36 @@ int isValidBirthYear(int year) {
     }
     return ok;
 }
+int isValidMemberShipType(int choice){
+	int ok = 0;
+    if (choice == 1 || choice == 2){
+    	ok = 1;
+    	return ok;
+	}
+  	return ok;
+}
 int searchMemberById(char findId[10], int total, struct memberProfile * members){
     int i = 0;
     for(; i < total;i++){
         if(strcmp(findId, members[i].memberId) == 0){
+            return i;
+        }
+    }
+    return -1;
+}
+int searchMemberByName(char findName[30], int total, struct memberProfile * members){
+    int i = 0;
+    for(; i < total; i++){
+        if(strcmp(findName, members[i].fullName)==0){
+            return i;
+        }
+    }
+    return -1;
+}
+int searchTrainerById(char findId[10], int size, struct trainerProfile trainerList[]){
+    int i = 0;
+    for(; i < size; i++){
+        if(strcmp(findId, trainerList[i].trainerID) == 0){
             return i;
         }
     }
@@ -182,7 +306,7 @@ void displayMember(int i, struct memberProfile * members){
     
 }
 void displayMenu(){
-        printf("=====MENU====\n");
+        printf("\n=====MENU====\n");
         printf("1. Member\n");
         printf("2. Trainer\n");
         printf("3. Display\n");
@@ -190,11 +314,12 @@ void displayMenu(){
         printf("0. Exit\n");
 }
 void displayMemberMenu(){
-    printf("=====MENU====\n");
+    printf("\n=====MEMBER MENU====\n");
     printf("1. Add member\n");
     printf("2. Remove member\n");
     printf("3. Sort member\n");
     printf("4. Search member\n");
+    printf("0. Back to main menu\n");
 }
 void addMember(int size, int*total, struct memberProfile **members){
     struct memberProfile * tmp = realloc(*members, (*total +size) * sizeof(struct memberProfile));
@@ -232,6 +357,7 @@ void addMember(int size, int*total, struct memberProfile **members){
         while(!isValidName(inputName));
         strcpy((*members)[idx].fullName, inputName);
         int inputYear;
+        //Kiểm tra năm sinh 
         do{
             printf("Enter the birthYear of #%d member: ", idx+1);
             scanf("%d", &inputYear);
@@ -240,9 +366,12 @@ void addMember(int size, int*total, struct memberProfile **members){
         (*members)[idx].birthYear = inputYear;
 
         int type;
-        printf("Enter the type membership (1. Standard / 2. VIP): ");
-        scanf("%d", &type);
-        getchar();
+        do{
+            printf("Enter the type membership (1. Standard / 2. VIP): ");
+            scanf("%d", &type);
+            getchar();
+        }
+        while(isValidMemberShipType(type) != 1);
         if(type == 1) strcpy((*members)[idx].memberType, "Standard");
         else if(type == 2) strcpy((*members)[idx].memberType, "VIP");
         }
@@ -288,9 +417,10 @@ void sortMemberByBirthYearOlder_to_young(struct memberProfile *members, int tota
     }
 }
 void displaySortMenu(){
-    printf("=====SORT=====\n");
+    printf("\n=====SORT MENU=====\n");
     printf("1. Youngest to oldest\n");
     printf("2. Oldest to youngest\n");
+    printf("0. Back to main menu\n");
 }
 void displayAllMember(int total, struct memberProfile*members){
     if(total == 0 || members == NULL){
@@ -306,10 +436,29 @@ void displayAllMember(int total, struct memberProfile*members){
         }
     }
 }
-
-
-
-
+void displayFileMenu(){
+    printf("\n===== FILE MENU =====\n");
+    printf("1. Save data to file\n");
+    printf("2. Load data from file\n");
+    printf("0. Back to main menu\n");
+}
+void displayTrainerMenu(){
+    printf("\n=====TRAINER MENU=====\n");
+    printf("1. Assign trainer\n");
+    printf("2. Revenue\n");
+    printf("3. Group members\n");
+    printf("4. Search\n");
+}
+void displaySearchmenu(){
+    printf("\n=====SEARCH MENU=====\n");
+    printf("1. Search by id\n");
+    printf("2. Search by name\n");
+}
+void displayTrainer(int idx, struct trainerProfile trainerList[]){
+    printf("%s\t%s\n",
+        trainerList[idx].trainerID,
+        trainerList[idx].trainerName);
+}
 
 
 
