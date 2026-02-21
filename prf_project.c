@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 struct memberProfile{
     char memberId[10];
     char fullName[30];
     int birthYear;
     char memberType[30];
+    time_t registerTime;
 };
 struct trainerProfile{
     char trainerID[10];
@@ -374,6 +376,7 @@ void addMember(int size, int*total, struct memberProfile **members){
         while(isValidMemberShipType(type) != 1);
         if(type == 1) strcpy((*members)[idx].memberType, "Standard");
         else if(type == 2) strcpy((*members)[idx].memberType, "VIP");
+        (*members)[idx].registerTime = time(NULL);
         }
     (*total) += size;
     }
@@ -427,12 +430,20 @@ void displayAllMember(int total, struct memberProfile*members){
         printf("This list is empty");
     }
     else{
+        printf("\n===== MEMBER LIST =====\n");
         for(int i = 0; i < total; i++){
-            printf("%s\t|\t%s\t|\t%d\t|\t%s\n", 
+            struct tm *t = localtime(&members[i].registerTime);
+            printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d %02d:%02d:%02d\n", 
                 members[i].memberId,
                 members[i].fullName,
                 members[i].birthYear,
-                members[i].memberType);
+                members[i].memberType,
+                t->tm_mday,
+                t->tm_mon + 1,
+                t->tm_year + 1900,
+                t->tm_hour,
+                t->tm_min,
+                t->tm_sec);
         }
     }
 }
