@@ -433,17 +433,14 @@ void displayAllMember(int total, struct memberProfile*members){
         printf("\n===== MEMBER LIST =====\n");
         for(int i = 0; i < total; i++){
             struct tm *t = localtime(&members[i].registerTime);
-            printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d %02d:%02d:%02d\n", 
+            printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
                 members[i].memberId,
                 members[i].fullName,
                 members[i].birthYear,
                 members[i].memberType,
                 t->tm_mday,
                 t->tm_mon + 1,
-                t->tm_year + 1900,
-                t->tm_hour,
-                t->tm_min,
-                t->tm_sec);
+                t->tm_year + 1900);
         }
     }
 }
