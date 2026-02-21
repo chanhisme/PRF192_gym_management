@@ -355,14 +355,24 @@ void addMember(int size, int*total, struct memberProfile **members){
             printf("Enter the name of #%d member: ", idx+1);
             fgets(inputName, sizeof(inputName), stdin);
             inputName[strcspn(inputName, "\n")] = '\0';
+            if(!isValidName(inputName)){
+                printf("This name is not valid\n");
+            }
+            if(searchMemberByName(inputName, *total, *members) != -1){
+                printf("This name already exists.\n");
+            }
+            
         }
-        while(!isValidName(inputName));
+        while(!isValidName(inputName) || searchMemberByName(inputName, *total, *members) != -1);
         strcpy((*members)[idx].fullName, inputName);
         int inputYear;
         //Kiểm tra năm sinh 
         do{
             printf("Enter the birthYear of #%d member: ", idx+1);
             scanf("%d", &inputYear);
+            if(!isValidBirthYear(inputYear)){
+                printf("This birth year is not valid\n");
+            }
         }
         while(!isValidBirthYear(inputYear));
         (*members)[idx].birthYear = inputYear;
@@ -372,6 +382,9 @@ void addMember(int size, int*total, struct memberProfile **members){
             printf("Enter the type membership (1. Standard / 2. VIP): ");
             scanf("%d", &type);
             getchar();
+            if(isValidMemberShipType(type) != 1){
+                printf("Your choice is not valid, please choose 1 or 2\n");
+            }
         }
         while(isValidMemberShipType(type) != 1);
         if(type == 1) strcpy((*members)[idx].memberType, "Standard");
