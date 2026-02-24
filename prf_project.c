@@ -19,8 +19,10 @@ struct trainerProfile{
 int numberOfTrainer = 10;
 struct trainerProfile trainerList[10] = {
     {"T001", "An"},
+    
     {"T002", "Binh"}
 };
+void clearBuffer();
 void displayMenu();
 int inputChoice();
 void displayMemberMenu();
@@ -44,6 +46,7 @@ int inputTrainerChoice();
 void displaySearchmenu();
 int inputSearchChoice();
 void displayTrainer(int idx, struct trainerProfile trainerList[]);
+void saveDataToFile( struct memberProfile * members, int total);
 int main(){
     int choice;
     int total = 0;
@@ -59,7 +62,7 @@ int main(){
                 int n;
                 printf("How many members: ");
                 scanf("%d",&n);
-                getchar(); 
+                clearBuffer();
                 addMember(n, &total, &members);
             }
             else if(memberChoice == 3){
@@ -162,7 +165,7 @@ int main(){
             displayFileMenu();
             fileChoice = inputFileChoice();
             if(fileChoice == 1){
-
+                saveDataToFile(members, total);
             }
             else if(fileChoice == 0){}
             else{
@@ -186,42 +189,42 @@ int inputFileChoice(){
     int fileChoice;
     printf("Enter file choice: ");
     scanf("%d", &fileChoice);
-    getchar();
+    clearBuffer();
     return fileChoice;
 }
 int inputMemberChoice(){
     int memberChoice;
     printf("Enter your choice: ");
     scanf("%d", &memberChoice);
-    getchar();
+    clearBuffer();
     return memberChoice;
 }
 int inputChoice(){
     int choice;
     printf("Enter your choice: ");
     scanf("%d",&choice);
-    getchar();
+    clearBuffer();
     return choice;
 }
 int inputTrainerChoice(){
     int trainerChoice;
     printf("Enter your choice: ");
     scanf("%d", &trainerChoice);
-    getchar();
+    clearBuffer();
     return trainerChoice;
 }
 int inputSortChoice(){
     int sortChoice;
     printf("Enter your choice: ");
     scanf("%d", &sortChoice);
-    getchar();
+    clearBuffer();
     return sortChoice;
 }
 int inputSearchChoice(){
     int searchChoice;
     printf("Enter your choice: ");
     scanf("%d", &searchChoice);
-    getchar();
+    clearBuffer();
     return searchChoice;
 }
 int isValidId(char id[]) {
@@ -309,11 +312,15 @@ int searchTrainerById(char findId[10], int size, struct trainerProfile trainerLi
 }
 //Hàm này chỉ display 1 member khi dùng search
 void displayMember(int i, struct memberProfile * members){
-    printf("%s\t|\t%s\t|\t%d\t|\t%s\n", 
-            members[i].memberId,
-            members[i].fullName,
-            members[i].birthYear,
-            members[i].memberType);
+    struct tm *t = localtime(&members[i].registerTime);
+    printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
+                members[i].memberId,
+                members[i].fullName,
+                members[i].birthYear,
+                members[i].memberType,
+                t->tm_mday,
+                t->tm_mon + 1,
+                t->tm_year + 1900);
     
 }
 void displayMenu(){
@@ -390,7 +397,7 @@ void addMember(int size, int*total, struct memberProfile **members){
         do{
             printf("Enter the type membership (1. Standard / 2. VIP): ");
             scanf("%d", &type);
-            getchar();
+            clearBuffer();
             if(isValidMemberShipType(type) != 1){
                 printf("Your choice is not valid, please choose 1 or 2\n");
             }
@@ -516,8 +523,48 @@ void displayTrainer(int idx, struct trainerProfile trainerList[]){
         trainerList[idx].trainerID,
         trainerList[idx].trainerName);
 }
+void exportingData(FILE * fptr){
 
-
+}
+void saveDataToFile( struct memberProfile * members, int total){
+    char input[30];
+    char fName[40];
+    printf("Enter your name file : ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = '\0';
+    snprintf(fName, sizeof(fName), "%s.txt", input);
+    FILE * fptr;
+    fptr = fopen(fName, "w");
+    if(!fptr){
+        printf("Cannot create file\n");
+        return;
+    }
+    else{
+        for(int i = 0; i < total; i++){
+            struct tm *t = localtime(&members[i].registerTime);
+            if (t == NULL) continue;
+            fprintf(fptr,
+                "ID: %s\n"
+                "Name: %s\n"
+                "Birth Year: %d\n"
+                "Type: %s\n"
+                "Register Date: %02d/%02d/%04d\n"
+                "-----------------------\n",
+                members[i].memberId,
+                members[i].fullName,
+                members[i].birthYear,
+                members[i].memberType,
+                t->tm_mday,
+                t->tm_mon + 1,
+                t->tm_year + 1900);
+        }
+        printf("Export successfully\n");
+        fclose(fptr);
+    }
+}
+void clearBuffer(){
+    while (getchar() != '\n');
+}
 
 
 
