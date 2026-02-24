@@ -35,6 +35,8 @@ int inputMemberChoice();
 int inputSortChoice();
 void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total);
 void sortMemberByBirthYearOlder_to_young(struct memberProfile * members, int total);
+void sortByDateLastest(struct memberProfile * members, int total);
+void sortByDateOldest(struct memberProfile * members, int total);
 void displayFileMenu();
 int inputFileChoice();
 void displayTrainerMenu();
@@ -69,6 +71,13 @@ int main(){
                 }
                 else if(sortChoice == 2){
                     sortMemberByBirthYearOlder_to_young(members, total);
+                }
+                else if(sortChoice == 3){
+                    sortByDateLastest(members, total);
+                }
+                else if(sortChoice == 4){
+                    sortByDateOldest(members, total);
+
                 }
                 else if(sortChoice == 0){}
                 else{
@@ -432,10 +441,37 @@ void sortMemberByBirthYearOlder_to_young(struct memberProfile *members, int tota
         printf("Sort succesfully\n");
     }
 }
+void sortByDateLastest(struct memberProfile * members, int total){
+    for(int i = 0; i < total - 1; i++){
+        for(int j = 0; j < total - i - 1; j++){
+            if( members[j].registerTime > members[j+1].registerTime ){
+                struct memberProfile temp = members[j];
+                    members[j] = members[j+1];
+                    members[j+1] = temp;
+            }
+        }
+    }
+    printf("Sort succesfully\n");
+}
+void sortByDateOldest(struct memberProfile * members, int total){
+    for(int i = 0; i < total - 1; i++){
+        for(int j = 0; j < total - i - 1; j++){
+            if( members[j].registerTime < members[j+1].registerTime ){
+                struct memberProfile temp = members[j];
+                    members[j] = members[j+1];
+                    members[j+1] = temp;
+            }
+        }
+    }
+    printf("Sort succesfully\n");
+}
+
 void displaySortMenu(){
     printf("\n=====SORT MENU=====\n");
     printf("1. Youngest to oldest\n");
     printf("2. Oldest to youngest\n");
+    printf("3. Lastest to oldest\n");
+    printf("4. Oldest to lastest\n");
     printf("0. Back to main menu\n");
 }
 void displayAllMember(int total, struct memberProfile*members){
