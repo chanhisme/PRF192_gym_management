@@ -4,25 +4,30 @@
 #include <time.h>
 struct memberProfile{
     char memberId[10];
+    char trainerId[32];
     char fullName[30];
     int birthYear;
     char memberType[30];
     time_t registerTime;
+    
 };
 struct trainerProfile{
-    char trainerID[10];
-    char trainerName[30];
-    // char specialty[20];
-    // char assignedMemberId[10];
-    // double monthlyFee;
+    char trainerId[10];
+    char trainerName[32];
+    char specialty[20];
+    char assignedMemberId[10];
+    int monthlyFee;
+    int memberCnt;
+    long long total;
 };
-int numberOfTrainer = 10;
-struct trainerProfile trainerList[10] = {
-    {"T001", "An"},
-    
-    {"T002", "Binh"}
+struct trainerProfile trainers[] = {
+    {"T001", "An","Strength", "", 10000000, 0, 0},
+    {"T002", "Binh", "Hypertrophy", "", 7000000, 0, 0},
+    {"T003", "Lan", "Endurance", "", 5000000, 0, 0}
 };
+int numberOfTrainer = sizeof(trainers)/sizeof(trainers[0]);
 //Function
+void removeMember(struct memberProfile ** members, int * total);
 void loadBinaryFile();
 int inputLoadFile();
 void loadTextFile();
@@ -60,6 +65,11 @@ void saveDataToFile( struct memberProfile * members, int total);
 void displayMenuLoadFile();
 void autoLoadFile(struct memberProfile **members, int *total);
 void autoSaveFile(struct memberProfile * members, int total);
+void displayAllTrainer(struct trainerProfile *trainerList, int numberOfTrainer);
+void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **members, struct trainerProfile *trainers);
+void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer);
+void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer);
+void groupMemberByTrainerId(struct memberProfile *members, int total);
 int main(){
     int choice;
     int total = 0;
@@ -68,6 +78,7 @@ int main(){
     do{
         displayMenu();
         choice = inputChoice();
+        //member
         if(choice == 1){
             int memberChoice;
             displayMemberMenu();
@@ -79,6 +90,10 @@ int main(){
                 clearBuffer();
                 addMember(n, &total, &members);
             }
+            else if(memberChoice == 2){
+                removeMember(&members, &total);
+
+            }  
             else if(memberChoice == 3){
                 int sortChoice;
                 displaySortMenu();
@@ -134,6 +149,7 @@ int main(){
                     }
                 }
                 
+                
             }
             else if(memberChoice == 0){
 
@@ -143,12 +159,37 @@ int main(){
             }
         
         }
+        //trainer
         else if(choice == 2){
             int trainerChoice;
             displayTrainerMenu();
             trainerChoice = inputTrainerChoice();
             if(trainerChoice == 1){
+                char idMember[10];
+                printf("Enter id member need to assign: ");
+                inputString(idMember, sizeof(idMember));
+                int memberIndex = searchMemberById(idMember, total, members);
+                if(memberIndex != -1){
+                    displayAllTrainer(trainers, numberOfTrainer);
+                    char assignedTrainer[10];
+                    printf("Enter your id trainer: ");
+                    inputString(assignedTrainer, sizeof(assignedTrainer));
+                    int trainerIndex = searchTrainerById(assignedTrainer, numberOfTrainer, trainers);
+                    if(trainerIndex != -1){
+                        assignTrainer(trainerIndex, memberIndex,  &members, trainers);
+                    }
 
+                }
+                else{
+                    printf("Cannot find this id\n");
+                }
+            }
+            else if(trainerChoice == 2){
+                caculateTotalRevenue(trainers, numberOfTrainer);
+                displayRevenue(trainers, numberOfTrainer);
+            }
+            else if(trainerChoice == 3){
+                groupMemberByTrainerId(members, total);
             }
             else if(trainerChoice == 4){
                 int searchChoice;
@@ -159,9 +200,9 @@ int main(){
                     printf("Enter ID you want to find: ");
                     fgets(findId, sizeof(findId), stdin);
                     findId[strcspn(findId, "\n")] = '\0';
-                    int index = searchTrainerById(findId, numberOfTrainer, trainerList);
+                    int index = searchTrainerById(findId, numberOfTrainer, trainers);
                     if(index!= -1){
-                        displayTrainer(index, trainerList);
+                        displayTrainer(index, trainers);
                     }
                     else{
                         printf("This id is not exist\n");
@@ -249,6 +290,7 @@ int inputTrainerChoice(){
     int trainerChoice;
     printf("Enter your choice: ");
     scanf("%d", &trainerChoice);
+    
     clearBuffer();
     return trainerChoice;
 }
@@ -329,7 +371,7 @@ int isValidMemberShipType(int choice){
 	}
   	return ok;
 }
-int searchMemberById(char findId[10], int total, struct memberProfile * members){
+int searchMemberById(char findId[16], int total, struct memberProfile * members){
     int i = 0;
     for(; i < total;i++){
         if(strcmp(findId, members[i].memberId) == 0){
@@ -350,7 +392,7 @@ int searchMemberByName(char findName[30], int total, struct memberProfile * memb
 int searchTrainerById(char findId[10], int size, struct trainerProfile trainerList[]){
     int i = 0;
     for(; i < size; i++){
-        if(strcmp(findId, trainerList[i].trainerID) == 0){
+        if(strcmp(findId, trainerList[i].trainerId) == 0){
             return i;
         }
     }
@@ -359,8 +401,9 @@ int searchTrainerById(char findId[10], int size, struct trainerProfile trainerLi
 //Hàm này chỉ display 1 member khi dùng search
 void displayMember(int i, struct memberProfile * members){
     struct tm *t = localtime(&members[i].registerTime);
-    printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
+    printf("%s\t|\t%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
                 members[i].memberId,
+                members[i].trainerId,
                 members[i].fullName,
                 members[i].birthYear,
                 members[i].memberType,
@@ -432,6 +475,7 @@ void addMember(int size, int*total, struct memberProfile **members){
         do{
             printf("Enter the birthYear of #%d member: ", idx+1);
             scanf("%d", &inputYear);
+            clearBuffer();
             if(!isValidBirthYear(inputYear)){
                 printf("This birth year is not valid\n");
             }
@@ -521,9 +565,24 @@ void sortByDateOldest(struct memberProfile * members, int total){
 }
 void removeMember(struct memberProfile ** members, int * total){
     int i;
-    char removeName[32];
-    printf("Enter the name: ");
-//    inputString();
+    char removeId[16];
+    printf("Enter the id: ");
+    inputString(removeId, sizeof(removeId));
+    int index = searchMemberById(removeId, *total, *members);
+    //tìm thấy nên index ko âm
+    if(index != -1){
+        for(i = index; i < (*total)-1; i++){
+            (*members)[i] = (*members)[i+1];
+        }
+        struct memberProfile *tmp = 
+            realloc(*members, (*total -1) * sizeof(struct memberProfile));
+        (*total)--;
+        *members = tmp;
+        printf("Remove successfully\n");
+    }
+    else{
+        printf("Cannot find this name\n");
+    }
 
 }
 void displaySortMenu(){
@@ -541,9 +600,11 @@ void displayAllMember(int total, struct memberProfile*members){
     else{
         printf("\n===== MEMBER LIST =====\n");
         for(int i = 0; i < total; i++){
+            // displayAllMember(i, members);
             struct tm *t = localtime(&members[i].registerTime);
-            printf("%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
+            printf("%s\t|\t%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
                 members[i].memberId,
+                members[i].trainerId,
                 members[i].fullName,
                 members[i].birthYear,
                 members[i].memberType,
@@ -572,9 +633,12 @@ void displaySearchmenu(){
     printf("2. Search by name\n");
 }
 void displayTrainer(int idx, struct trainerProfile trainerList[]){
-    printf("%s\t%s\n",
-        trainerList[idx].trainerID,
-        trainerList[idx].trainerName);
+    printf("%s\t%s\t%s\t%d\t\t%d\n",
+        trainers[idx].trainerId,
+        trainers[idx].trainerName,
+        trainers[idx].specialty,
+        trainers[idx].monthlyFee,
+        trainers[idx].memberCnt);
 }
 void saveDataToFile( struct memberProfile * members, int total){
     char input[30];
@@ -799,5 +863,42 @@ void loadTextFile(){
 		fclose(fptr);
 	}
 }
-
-
+void displayAllTrainer(struct trainerProfile *trainers, int numberOfTrainer){
+    for(int i = 0; i < numberOfTrainer; i++){
+        displayTrainer(i,trainers);
+    }
+}
+void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **members, struct trainerProfile *trainers){
+    strcpy((*members)[memberIndex].trainerId, 
+    trainers[trainerIndex].trainerId);
+    trainers[trainerIndex].memberCnt ++;
+    printf("Assign succesfully\n");
+}
+void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer){
+    for(int i = 0; i < numberOfTrainer; i++){
+        trainers[i].total += (trainers[i].monthlyFee) * (trainers[i].memberCnt);
+    }
+    printf("Calculate successfully\n");
+}
+void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer){
+    for(int i =0; i < numberOfTrainer; i++){
+        printf("%s\t\t%s\t\t%d\t\t%d\t\t%lld\n",
+            trainers[i].trainerId,
+            trainers[i].trainerName,
+            trainers[i].memberCnt,
+            trainers[i].monthlyFee,
+            trainers[i].total);
+    }
+}
+void groupMemberByTrainerId(struct memberProfile *members, int total){
+    for(int i = 0; i < total-1; i++){
+        for(int j = 0; j < total - 1 - i; j ++){
+            if(strcmp(members[j].trainerId, members[j+1].trainerId) > 0){
+                struct memberProfile tmp = members[j];
+                members[j] = members[j+1];
+                members[j+1] = tmp;
+            }
+        }
+    }
+    printf("Group succesfully\n");
+}
