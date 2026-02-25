@@ -604,60 +604,46 @@ void autoLoadFile(struct memberProfile **members, int *total){
 		printf("\n");
 		char line[256];
         struct memberProfile temp;
-
 		while(fgets(line, sizeof(line), fptr)){
-
-        line[strcspn(line, "\n")] = '\0';
-
-        if(strncmp(line, "ID: ", 4) == 0){
-            strcpy(temp.memberId, line + 4);
-        }
-
-        else if(strncmp(line, "Name: ", 6) == 0){
-            strcpy(temp.fullName, line + 6);
-        }
-
-        else if(strncmp(line, "Birth Year: ", 12) == 0){
-            temp.birthYear = atoi(line + 12);
-        }
-
-        else if(strncmp(line, "Type: ", 6) == 0){
-            strcpy(temp.memberType, line + 6);
-        }
-
-        else if(strncmp(line, "Register Date: ", 15) == 0){
-
-            int day, month, year;
-
-            sscanf(line + 15, "%d/%d/%d", &day, &month, &year);
-
-            struct tm tm_info = {0};
-            tm_info.tm_mday = day;
-            tm_info.tm_mon = month - 1;
-            tm_info.tm_year = year - 1900;
-
-            temp.registerTime = mktime(&tm_info);
-        }
-
-        else if(strncmp(line, "-----------------------", 23) == 0){
-
-            // gặp dấu phân cách → lưu member vào mảng
-
-            struct memberProfile *tmpPtr =
-                realloc(*members, (*total + 1) * sizeof(struct memberProfile));
-
-            if(tmpPtr == NULL){
-                printf("Memory allocation failed\n");
-                fclose(fptr);
-                return;
+            line[strcspn(line, "\n")] = '\0';
+            if(strncmp(line, "ID: ", 4) == 0){
+                strcpy(temp.memberId, line + 4);
             }
-
-            *members = tmpPtr;
-            (*members)[*total] = temp;
-            (*total)++;
-        }
+            else if(strncmp(line, "Name: ", 6) == 0){
+                strcpy(temp.fullName, line + 6);
+            }
+            else if(strncmp(line, "Birth Year: ", 12) == 0){
+                //đọc năm dạng chuỗi và đổi về giá int
+                temp.birthYear = atoi(line + 12);
+            }
+            else if(strncmp(line, "Type: ", 6) == 0){
+                strcpy(temp.memberType, line + 6);
+            }
+            else if(strncmp(line, "Register Date: ", 15) == 0){
+                int day, month, year;
+                //đọc string theo format
+                sscanf(line + 15, "%d/%d/%d", &day, &month, &year);
+                struct tm tm_info = {0};
+                tm_info.tm_mday = day;
+                tm_info.tm_mon = month - 1;
+                tm_info.tm_year = year - 1900;
+                //chuyển từ struct tm về time_t dùng mktime
+                temp.registerTime = mktime(&tm_info);
+            }
+            else if(strncmp(line, "-----------------------", 23) == 0){
+                // gặp dấu phân cách , lưu member vào mảng
+                struct memberProfile *tmpPtr =
+                    realloc(*members, (*total + 1) * sizeof(struct memberProfile));
+                if(tmpPtr == NULL){
+                    printf("Memory allocation failed\n");
+                    fclose(fptr);
+                    return;
+                }
+                *members = tmpPtr;
+                (*members)[*total] = temp;
+                (*total)++;
+            }
     }
-
     fclose(fptr);
 }
 }
