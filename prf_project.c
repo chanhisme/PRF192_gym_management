@@ -22,7 +22,12 @@ struct trainerProfile trainerList[10] = {
     
     {"T002", "Binh"}
 };
+void displaySaveMenu();
+void buildBinaryFileName(char inputName[], char finalName[], int size);
+void buildFileName(char inputName[], char finalName[], int size);
+void inputString(char str[], int size);
 void clearBuffer();
+int inputSaveChoice();
 void displayMenu();
 int inputChoice();
 void displayMemberMenu();
@@ -45,6 +50,7 @@ void displayTrainerMenu();
 int inputTrainerChoice();
 void displaySearchmenu();
 int inputSearchChoice();
+void saveDataBinary(struct memberProfile * members, int total);
 void displayTrainer(int idx, struct trainerProfile trainerList[]);
 void saveDataToFile( struct memberProfile * members, int total);
 int main(){
@@ -165,7 +171,16 @@ int main(){
             displayFileMenu();
             fileChoice = inputFileChoice();
             if(fileChoice == 1){
-                saveDataToFile(members, total);
+				int saveChoice;
+				displaySaveMenu();
+				saveChoice = inputSaveChoice();
+				if(saveChoice == 1){
+					saveDataBinary(members, total);
+				}
+				else if(saveChoice == 2){
+					saveDataToFile(members, total);
+				}
+                
             }
             else if(fileChoice == 0){}
             else{
@@ -184,6 +199,13 @@ int main(){
     members = NULL;
 
     return 0;
+}
+int inputSaveChoice(){
+	int saveChoice;
+	printf("Enter your save choice: ");
+	scanf("%d", &saveChoice);
+	clearBuffer();
+	return saveChoice;
 }
 int inputFileChoice(){
     int fileChoice;
@@ -523,16 +545,38 @@ void displayTrainer(int idx, struct trainerProfile trainerList[]){
         trainerList[idx].trainerID,
         trainerList[idx].trainerName);
 }
-void exportingData(FILE * fptr){
 
+void buildFileName(char inputName[], char finalName[], int size){
+	snprintf(finalName, size, "%s.txt", inputName);
+}
+void buildBinaryFileName(char inputName[], char finalName[], int size){
+	snprintf(finalName, size, "%s.bin", inputName);
+}
+
+void saveDataBinary(struct memberProfile * members, int total){
+	char input[30];
+    char fName[40];
+    printf("Enter your name file : ");
+    inputString(input, sizeof(input));
+	buildBinaryFileName(input, fName, sizeof(fName));
+    FILE * fptr;
+    fptr = fopen(fName, "wb");
+	if(!fptr){
+        printf("Cannot create file\n");
+        return;
+    }
+	else{
+		fwrite(members, sizeof(struct memberProfile), total, fptr);
+		printf("Export successfully\n");
+        fclose(fptr);
+	}
 }
 void saveDataToFile( struct memberProfile * members, int total){
     char input[30];
     char fName[40];
     printf("Enter your name file : ");
-    fgets(input, sizeof(input), stdin);
-    input[strcspn(input, "\n")] = '\0';
-    snprintf(fName, sizeof(fName), "%s.txt", input);
+    inputString(input, sizeof(input));
+	buildFileName(input, fName, sizeof(fName));
     FILE * fptr;
     fptr = fopen(fName, "w");
     if(!fptr){
@@ -565,7 +609,18 @@ void saveDataToFile( struct memberProfile * members, int total){
 void clearBuffer(){
     while (getchar() != '\n');
 }
-
+void inputString(char str[], int size){
+	fgets(str, size, stdin);
+    str[strcspn(str, "\n")] = '\0';
+}
+void displaySaveMenu(){
+	printf("\n=====SAVE MENU=====\n");
+	printf("1. Binary\n");
+	printf("2.Text\n");
+}
+void loadFile(){
+	
+}
 
 
 
