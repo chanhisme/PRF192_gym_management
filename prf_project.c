@@ -725,6 +725,9 @@ void autoLoadFile(struct memberProfile **members, int *total){
             if(strncmp(line, "ID: ", 4) == 0){
                 strcpy(temp.memberId, line + 4);
             }
+            else if(strncmp(line, "Trainer: ",9) == 0){
+                strcpy(temp.trainerId,line+9);
+            }
             else if(strncmp(line, "Name: ", 6) == 0){
                 strcpy(temp.fullName, line + 6);
             }
