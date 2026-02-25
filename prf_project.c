@@ -22,9 +22,16 @@ struct trainerProfile trainerList[10] = {
     
     {"T002", "Binh"}
 };
-void autoLoadFile(struct memberProfile **members, int *total);
-void autoSaveFile(struct memberProfile * members, int total);
+//Function
+void loadBinaryFile();
+int inputLoadFile();
+void loadTextFile();
+void displaySaveMenu();
+void buildBinaryFileName(char inputName[], char finalName[], int size);
+void buildFileName(char inputName[], char finalName[], int size);
+void inputString(char str[], int size);
 void clearBuffer();
+int inputSaveChoice();
 void displayMenu();
 int inputChoice();
 void displayMemberMenu();
@@ -47,8 +54,12 @@ void displayTrainerMenu();
 int inputTrainerChoice();
 void displaySearchmenu();
 int inputSearchChoice();
+void saveDataBinary(struct memberProfile * members, int total);
 void displayTrainer(int idx, struct trainerProfile trainerList[]);
 void saveDataToFile( struct memberProfile * members, int total);
+void displayMenuLoadFile();
+void autoLoadFile(struct memberProfile **members, int *total);
+void autoSaveFile(struct memberProfile * members, int total);
 int main(){
     int choice;
     int total = 0;
@@ -168,8 +179,29 @@ int main(){
             displayFileMenu();
             fileChoice = inputFileChoice();
             if(fileChoice == 1){
-                saveDataToFile(members, total);
+				int saveChoice;
+				displaySaveMenu();
+				saveChoice = inputSaveChoice();
+				if(saveChoice == 1){
+					saveDataBinary(members, total);
+				}
+				else if(saveChoice == 2){
+					saveDataToFile(members, total);
+				}
+                
             }
+			else if(fileChoice == 2){
+				int loadChoice;
+				displayMenuLoadFile();
+				loadChoice = inputLoadFile();
+				if(loadChoice == 1){
+					loadBinaryFile();
+
+				}
+				else if(loadChoice == 2){
+					loadTextFile();
+				}
+			}
             else if(fileChoice == 0){}
             else{
                 printf("***PLEASE choose 1 of options in menu, try again!\n");
@@ -188,6 +220,10 @@ int main(){
 
     return 0;
 }
+
+
+
+//Prototype
 int inputFileChoice(){
     int fileChoice;
     printf("Enter file choice: ");
@@ -242,6 +278,13 @@ int isValidId(char id[]) {
     else {
         return 0;
     }
+}
+int inputLoadFile(){
+	int loadChoice;
+	printf("Enter your choice: ");
+	scanf("%d", &loadChoice);
+	clearBuffer();
+	return loadChoice;
 }
 int isValidName(char *name) {
     int hasLetter = 0;
@@ -412,6 +455,7 @@ void addMember(int size, int*total, struct memberProfile **members){
         }
     (*total) += size;
     }
+
 void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total){
     if(total == 0 || members == NULL){
         printf("It is a empty list\n");
@@ -475,7 +519,13 @@ void sortByDateOldest(struct memberProfile * members, int total){
     }
     printf("Sort succesfully\n");
 }
+void removeMember(struct memberProfile ** members, int * total){
+    int i;
+    char removeName[32];
+    printf("Enter the name: ");
+//    inputString();
 
+}
 void displaySortMenu(){
     printf("\n=====SORT MENU=====\n");
     printf("1. Youngest to oldest\n");
@@ -647,13 +697,107 @@ void autoLoadFile(struct memberProfile **members, int *total){
     fclose(fptr);
 }
 }
+void inputString(char str[], int size){
+	fgets(str, size, stdin);
+    str[strcspn(str, "\n")] = '\0';
+}
 
+void buildFileName(char inputName[], char finalName[], int size){
+	snprintf(finalName, size, "%s.txt", inputName);
+}
+void buildBinaryFileName(char inputName[], char finalName[], int size){
+	snprintf(finalName, size, "%s.bin", inputName);
+}
+void saveDataBinary(struct memberProfile * members, int total){
+	char input[30];
+    char fName[40];
+    printf("Enter your name file : ");
+    inputString(input, sizeof(input));
+	buildBinaryFileName(input, fName, sizeof(fName));
+    FILE * fptr;
+    fptr = fopen(fName, "wb");
+	if(!fptr){
+        printf("Cannot create file\n");
+        return;
+    }
+	else{
+		fwrite(members, sizeof(struct memberProfile), total, fptr);
+		printf("Export successfully\n");
+        fclose(fptr);
+	}
+}
+int inputSaveChoice(){
+	int saveChoice;
+	printf("Enter your save choice: ");
+	scanf("%d", &saveChoice);
+	clearBuffer();
+	return saveChoice;
+}
 
+void displayMenuLoadFile(){
+	printf("\n====MENU LOAD FILE=====\n");
+	printf("1. Binary file\n");
+	printf("2. Text file\n");
+}
+void loadBinaryFile(){
+	char inputName[32];
+	char fName[40];
+	printf("Enter your name file : ");
+    inputString(inputName, sizeof(inputName));
+	buildBinaryFileName(inputName, fName, sizeof(fName));
+	FILE * fptr = fopen(fName, "rb");
+	if(!fptr){
+		printf("Cannot open this file\n");
+		return;
+	}
+	else{
+		printf("\n");
+		struct memberProfile tmp;
+		
+		while(fread(&tmp, sizeof(struct memberProfile), 1, fptr)){
+			time_t rawTime = tmp.registerTime;
+			struct tm * timeInfo = localtime(&rawTime);
+			char date[32];
+			strftime(date, sizeof(date), "%d/%m/%Y", timeInfo);
+			printf("ID: %s\n", tmp.memberId);
+			printf("Name: %s\n", tmp.fullName);
+			printf("Birth Year: %d\n", tmp.birthYear);
+			printf("Type: %s\n", tmp.memberType);
+			printf("Register Date: %s\n", date);
+			printf("-----------------------\n");
+		}
+		printf("Load successfully\n");
+    	fclose(fptr);
 
+	}
 
-
-
-
-
+}
+void displaySaveMenu(){
+	printf("\n=====SAVE MENU=====\n");
+	printf("1. Binary\n");
+	printf("2.Text\n");
+}
+void loadTextFile(){
+	char inputName[32];
+	char fName[40];
+	printf("Enter your name file : ");
+    inputString(inputName, sizeof(inputName));
+	buildFileName(inputName, fName, sizeof(fName));
+	FILE * fptr;
+	fptr = fopen(fName, "r");
+	if (!fptr){
+		printf("Cannot open file\n");
+		return;
+	}
+	else{
+		printf("\n");
+		char line[256];
+		while(fgets(line, sizeof(line), fptr)){
+			printf("%s", line);
+		}
+		printf("Sucessfully\n");
+		fclose(fptr);
+	}
+}
 
 
