@@ -691,12 +691,14 @@ void autoSaveFile(struct memberProfile * members, int total){
             if (t == NULL) continue;
             fprintf(fptr,
                 "ID: %s\n"
+                "Trainer: %s\n"
                 "Name: %s\n"
                 "Birth Year: %d\n"
                 "Type: %s\n"
                 "Register Date: %02d/%02d/%04d\n"
                 "-----------------------\n",
                 members[i].memberId,
+                members[i].trainerId,
                 members[i].fullName,
                 members[i].birthYear,
                 members[i].memberType,
@@ -893,6 +895,7 @@ void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer){
 void groupMemberByTrainerId(struct memberProfile *members, int total){
     for(int i = 0; i < total-1; i++){
         for(int j = 0; j < total - 1 - i; j ++){
+            //để vế trái lớn hơn vế phải thì vế trái trừ vế phải phải ra số dương
             if(strcmp(members[j].trainerId, members[j+1].trainerId) > 0){
                 struct memberProfile tmp = members[j];
                 members[j] = members[j+1];
