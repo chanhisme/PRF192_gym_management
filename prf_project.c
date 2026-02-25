@@ -63,7 +63,7 @@ void saveDataBinary(struct memberProfile * members, int total);
 void displayTrainer(int idx, struct trainerProfile trainerList[]);
 void saveDataToFile( struct memberProfile * members, int total);
 void displayMenuLoadFile();
-void autoLoadFile(struct memberProfile **members, int *total);
+void autoLoadFile(struct memberProfile **members, int *total, struct trainerProfile *trainers, int numberOfTrainer);
 void autoSaveFile(struct memberProfile * members, int total);
 void displayAllTrainer(struct trainerProfile *trainerList, int numberOfTrainer);
 void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **members, struct trainerProfile *trainers);
@@ -74,7 +74,7 @@ int main(){
     int choice;
     int total = 0;
     struct memberProfile * members = NULL;
-    autoLoadFile(&members, &total);
+    autoLoadFile(&members, &total, trainers, numberOfTrainer);
     do{
         displayMenu();
         choice = inputChoice();
@@ -710,7 +710,8 @@ void autoSaveFile(struct memberProfile * members, int total){
         fclose(fptr);
     }
 }
-void autoLoadFile(struct memberProfile **members, int *total){
+void autoLoadFile(struct memberProfile **members, int *total, 
+    struct trainerProfile *trainers, int numberOfTrainer){
     FILE * fptr = fopen("Gym_Membership_&_Trainer_Management.txt", "r");
     if (!fptr){
 		printf("File is not created\n");
@@ -719,7 +720,11 @@ void autoLoadFile(struct memberProfile **members, int *total){
 	else{
 		printf("\n");
 		char line[256];
-        struct memberProfile temp;
+        //set bằng 0 hết trc khi cộng
+        for(int i = 0; i < numberOfTrainer; i++){
+            trainers[i].memberCnt = 0;
+        }
+        struct memberProfile temp = {0};
 		while(fgets(line, sizeof(line), fptr)){
             line[strcspn(line, "\n")] = '\0';
             if(strncmp(line, "ID: ", 4) == 0){
@@ -750,9 +755,17 @@ void autoLoadFile(struct memberProfile **members, int *total){
                 temp.registerTime = mktime(&tm_info);
             }
             else if(strncmp(line, "-----------------------", 23) == 0){
+                //kiểm tra có tồn tại thì sẽ cộng
+                if(temp.trainerId[0] != '\0'){
+                    int pos = searchTrainerById(temp.trainerId, numberOfTrainer, trainers);
+                    if(pos != -1){
+                        trainers[pos].memberCnt++;
+                    }
+                }
                 // gặp dấu phân cách , lưu member vào mảng
                 struct memberProfile *tmpPtr =
                     realloc(*members, (*total + 1) * sizeof(struct memberProfile));
+
                 if(tmpPtr == NULL){
                     printf("Memory allocation failed\n");
                     fclose(fptr);
@@ -761,6 +774,7 @@ void autoLoadFile(struct memberProfile **members, int *total){
                 *members = tmpPtr;
                 (*members)[*total] = temp;
                 (*total)++;
+                memset(&temp, 0, sizeof(temp));
             }
     }
     fclose(fptr);
