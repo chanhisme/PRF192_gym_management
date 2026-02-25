@@ -22,12 +22,9 @@ struct trainerProfile trainerList[10] = {
     
     {"T002", "Binh"}
 };
-void displaySaveMenu();
-void buildBinaryFileName(char inputName[], char finalName[], int size);
-void buildFileName(char inputName[], char finalName[], int size);
-void inputString(char str[], int size);
+void autoLoadFile(struct memberProfile **members, int *total);
+void autoSaveFile(struct memberProfile * members, int total);
 void clearBuffer();
-int inputSaveChoice();
 void displayMenu();
 int inputChoice();
 void displayMemberMenu();
@@ -50,13 +47,13 @@ void displayTrainerMenu();
 int inputTrainerChoice();
 void displaySearchmenu();
 int inputSearchChoice();
-void saveDataBinary(struct memberProfile * members, int total);
 void displayTrainer(int idx, struct trainerProfile trainerList[]);
 void saveDataToFile( struct memberProfile * members, int total);
 int main(){
     int choice;
     int total = 0;
     struct memberProfile * members = NULL;
+    autoLoadFile(&members, &total);
     do{
         displayMenu();
         choice = inputChoice();
@@ -171,16 +168,7 @@ int main(){
             displayFileMenu();
             fileChoice = inputFileChoice();
             if(fileChoice == 1){
-				int saveChoice;
-				displaySaveMenu();
-				saveChoice = inputSaveChoice();
-				if(saveChoice == 1){
-					saveDataBinary(members, total);
-				}
-				else if(saveChoice == 2){
-					saveDataToFile(members, total);
-				}
-                
+                saveDataToFile(members, total);
             }
             else if(fileChoice == 0){}
             else{
@@ -194,18 +182,11 @@ int main(){
 
 
 
-
+    autoSaveFile(members, total);
     free(members);
     members = NULL;
 
     return 0;
-}
-int inputSaveChoice(){
-	int saveChoice;
-	printf("Enter your save choice: ");
-	scanf("%d", &saveChoice);
-	clearBuffer();
-	return saveChoice;
 }
 int inputFileChoice(){
     int fileChoice;
@@ -545,38 +526,13 @@ void displayTrainer(int idx, struct trainerProfile trainerList[]){
         trainerList[idx].trainerID,
         trainerList[idx].trainerName);
 }
-
-void buildFileName(char inputName[], char finalName[], int size){
-	snprintf(finalName, size, "%s.txt", inputName);
-}
-void buildBinaryFileName(char inputName[], char finalName[], int size){
-	snprintf(finalName, size, "%s.bin", inputName);
-}
-
-void saveDataBinary(struct memberProfile * members, int total){
-	char input[30];
-    char fName[40];
-    printf("Enter your name file : ");
-    inputString(input, sizeof(input));
-	buildBinaryFileName(input, fName, sizeof(fName));
-    FILE * fptr;
-    fptr = fopen(fName, "wb");
-	if(!fptr){
-        printf("Cannot create file\n");
-        return;
-    }
-	else{
-		fwrite(members, sizeof(struct memberProfile), total, fptr);
-		printf("Export successfully\n");
-        fclose(fptr);
-	}
-}
 void saveDataToFile( struct memberProfile * members, int total){
     char input[30];
     char fName[40];
     printf("Enter your name file : ");
-    inputString(input, sizeof(input));
-	buildFileName(input, fName, sizeof(fName));
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = '\0';
+    snprintf(fName, sizeof(fName), "%s.txt", input);
     FILE * fptr;
     fptr = fopen(fName, "w");
     if(!fptr){
@@ -609,19 +565,102 @@ void saveDataToFile( struct memberProfile * members, int total){
 void clearBuffer(){
     while (getchar() != '\n');
 }
-void inputString(char str[], int size){
-	fgets(str, size, stdin);
-    str[strcspn(str, "\n")] = '\0';
+void autoSaveFile(struct memberProfile * members, int total){
+    FILE* fptr = fopen("Gym_Membership_&_Trainer_Management.txt", "w");
+    if(!fptr){
+        printf("Cannot create file\n");
+        return;
+    }
+    else{
+        for(int i = 0; i < total; i++){
+            struct tm *t = localtime(&members[i].registerTime);
+            if (t == NULL) continue;
+            fprintf(fptr,
+                "ID: %s\n"
+                "Name: %s\n"
+                "Birth Year: %d\n"
+                "Type: %s\n"
+                "Register Date: %02d/%02d/%04d\n"
+                "-----------------------\n",
+                members[i].memberId,
+                members[i].fullName,
+                members[i].birthYear,
+                members[i].memberType,
+                t->tm_mday,
+                t->tm_mon + 1,
+                t->tm_year + 1900);
+        }
+        printf("Export successfully\n");
+        fclose(fptr);
+    }
 }
-void displaySaveMenu(){
-	printf("\n=====SAVE MENU=====\n");
-	printf("1. Binary\n");
-	printf("2.Text\n");
-}
-void loadFile(){
-	
-}
+void autoLoadFile(struct memberProfile **members, int *total){
+    FILE * fptr = fopen("Gym_Membership_&_Trainer_Management.txt", "r");
+    if (!fptr){
+		printf("File is not created\n");
+		return;
+	}
+	else{
+		printf("\n");
+		char line[256];
+        struct memberProfile temp;
 
+		while(fgets(line, sizeof(line), fptr)){
+
+        line[strcspn(line, "\n")] = '\0';
+
+        if(strncmp(line, "ID: ", 4) == 0){
+            strcpy(temp.memberId, line + 4);
+        }
+
+        else if(strncmp(line, "Name: ", 6) == 0){
+            strcpy(temp.fullName, line + 6);
+        }
+
+        else if(strncmp(line, "Birth Year: ", 12) == 0){
+            temp.birthYear = atoi(line + 12);
+        }
+
+        else if(strncmp(line, "Type: ", 6) == 0){
+            strcpy(temp.memberType, line + 6);
+        }
+
+        else if(strncmp(line, "Register Date: ", 15) == 0){
+
+            int day, month, year;
+
+            sscanf(line + 15, "%d/%d/%d", &day, &month, &year);
+
+            struct tm tm_info = {0};
+            tm_info.tm_mday = day;
+            tm_info.tm_mon = month - 1;
+            tm_info.tm_year = year - 1900;
+
+            temp.registerTime = mktime(&tm_info);
+        }
+
+        else if(strncmp(line, "-----------------------", 23) == 0){
+
+            // gặp dấu phân cách → lưu member vào mảng
+
+            struct memberProfile *tmpPtr =
+                realloc(*members, (*total + 1) * sizeof(struct memberProfile));
+
+            if(tmpPtr == NULL){
+                printf("Memory allocation failed\n");
+                fclose(fptr);
+                return;
+            }
+
+            *members = tmpPtr;
+            (*members)[*total] = temp;
+            (*total)++;
+        }
+    }
+
+    fclose(fptr);
+}
+}
 
 
 
