@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 struct memberProfile{
     char memberId[10];
     char trainerId[32];
@@ -18,7 +19,7 @@ struct trainerProfile{
     char assignedMemberId[10];
     int monthlyFee;
     int memberCnt;
-    long long total;
+    long long total; //do đơn vị tiền tệ VN lớn nên dùng long long
 };
 struct trainerProfile trainers[] = {
     {"T001", "An","Strength", "", 10000000, 0, 0},
@@ -27,6 +28,7 @@ struct trainerProfile trainers[] = {
 };
 int numberOfTrainer = sizeof(trainers)/sizeof(trainers[0]);
 //Function
+// int worldCouting(char *name);
 void removeMember(struct memberProfile ** members, int * total);
 void loadBinaryFile();
 int inputLoadFile();
@@ -328,6 +330,22 @@ int inputLoadFile(){
 	clearBuffer();
 	return loadChoice;
 }
+int worldCouting(char *name){
+    int isWorld = 0;
+    int cnt = 0;
+    //duyệt từng kí tự nếu vào dc từ thì cnt++ còn khi ở trong từ thì ko thực hiện gì hết
+    //khi gặp space thì set lại isWorld = 0 và lặp lại 
+    for(int i = 0; name[i] != '\0'; i ++){
+        if( !(isspace(name[i])) && isWorld == 0 ){
+            cnt++;
+            isWorld = 1;
+        }
+        else{
+            isWorld = 0;
+        }
+    }
+    return cnt;
+}
 int isValidName(char *name) {
     int hasLetter = 0;
     int len = strlen(name);
@@ -336,8 +354,7 @@ int isValidName(char *name) {
     if(name[0] == ' ' || name[len - 1] == ' ') {
         return 0;
     }
-    int i = 0;
-    for(; i < len; i++){
+    for(int i = 0; i < len; i++){
         char c = name[i];
         // Không cho 2 space liên tiếp
         //đồng thời check ko cho đầu và kết thúc chuỗi là 1 space
@@ -466,9 +483,12 @@ void addMember(int size, int*total, struct memberProfile **members){
             if(searchMemberByName(inputName, *total, *members) != -1){
                 printf("This name already exists.\n");
             }
+            if(worldCouting(inputName) < 2){
+                printf("This name must be 2 worlds\n");
+            }
             
         }
-        while(!isValidName(inputName) || searchMemberByName(inputName, *total, *members) != -1);
+        while(!isValidName(inputName) || worldCouting(inputName) >= 2|| searchMemberByName(inputName, *total, *members) != -1);
         strcpy((*members)[idx].fullName, inputName);
         int inputYear;
         //Kiểm tra năm sinh 
