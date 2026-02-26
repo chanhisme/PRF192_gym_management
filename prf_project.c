@@ -10,6 +10,7 @@ struct memberProfile{
     int birthYear;
     char memberType[30];
     time_t registerTime;
+    int active; // 1 là có active, 0 là inactive
     
 };
 struct trainerProfile{
@@ -72,11 +73,15 @@ void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **memb
 void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer);
 void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer);
 void groupMemberByTrainerId(struct memberProfile *members, int total);
+int canRemove(struct memberProfile * members, int index);
+void autoUpdateActive(struct memberProfile *members, int total);
 int main(){
     int choice;
     int total = 0;
     struct memberProfile * members = NULL;
     autoLoadFile(&members, &total, trainers, numberOfTrainer);
+    autoUpdateActive(members,total);
+
     do{
         displayMenu();
         choice = inputChoice();
@@ -513,12 +518,14 @@ void addMember(int size, int*total, struct memberProfile **members){
             }
         }
         while(isValidMemberShipType(type) != 1);
+
         if(type == 1) strcpy((*members)[idx].memberType, "Standard");
         else if(type == 2) strcpy((*members)[idx].memberType, "VIP");
         (*members)[idx].registerTime = time(NULL);
-        }
-    (*total) += size;
+        (*members)[idx].active = 1;
     }
+    (*total) += size;
+}
 
 void sortMemberByBirthYearYoung_to_old(struct memberProfile * members, int total){
     if(total == 0 || members == NULL){
@@ -583,14 +590,21 @@ void sortByDateOldest(struct memberProfile * members, int total){
     }
     printf("Sort succesfully\n");
 }
+int canRemove(struct memberProfile *members, int index){
+    int isRemove = 0;
+    if( members[index].active == 0){
+        isRemove = 1;
+    }
+return isRemove;
+}
 void removeMember(struct memberProfile ** members, int * total){
     int i;
     char removeId[16];
     printf("Enter the id: ");
     inputString(removeId, sizeof(removeId));
     int index = searchMemberById(removeId, *total, *members);
-    //tìm thấy nên index ko âm
-    if(index != -1){
+    //tìm thấy nên index ko âm và nó ko active
+    if(index != -1 && canRemove(*members, index) != 0){
         for(i = index; i < (*total)-1; i++){
             (*members)[i] = (*members)[i+1];
         }
@@ -601,7 +615,13 @@ void removeMember(struct memberProfile ** members, int * total){
         printf("Remove successfully\n");
     }
     else{
-        printf("Cannot find this name\n");
+        if(index == -1){
+            printf("Cannot find this id\n");
+        }
+        else if(canRemove(*members, index) ==0){
+            printf("This id is still active\n");
+        }
+        
     }
 
 }
@@ -622,7 +642,7 @@ void displayAllMember(int total, struct memberProfile*members){
         for(int i = 0; i < total; i++){
             // displayAllMember(i, members);
             struct tm *t = localtime(&members[i].registerTime);
-            printf("%-10s | %-10s | %-15s | %-6d | %-10s | %02d/%02d/%04d\n",
+            printf("%-10s | %-10s | %-15s | %-6d | %-10s | %02d/%02d/%04d | %-6d\n",
                     members[i].memberId,
                     members[i].trainerId,
                     members[i].fullName,
@@ -630,7 +650,8 @@ void displayAllMember(int total, struct memberProfile*members){
                     members[i].memberType,
                     t->tm_mday,
                     t->tm_mon + 1,
-                    t->tm_year + 1900);
+                    t->tm_year + 1900,
+                    members[i].active);
         }
     }
 }
@@ -716,6 +737,7 @@ void autoSaveFile(struct memberProfile * members, int total){
                 "Birth Year: %d\n"
                 "Type: %s\n"
                 "Register Date: %02d/%02d/%04d\n"
+                "Active: %d\n"
                 "-----------------------\n",
                 members[i].memberId,
                 members[i].trainerId,
@@ -724,7 +746,8 @@ void autoSaveFile(struct memberProfile * members, int total){
                 members[i].memberType,
                 t->tm_mday,
                 t->tm_mon + 1,
-                t->tm_year + 1900);
+                t->tm_year + 1900,
+                members[i].active);
         }
         printf("Export successfully\n");
         fclose(fptr);
@@ -760,9 +783,13 @@ void autoLoadFile(struct memberProfile **members, int *total,
                 //đọc năm dạng chuỗi và đổi về giá int
                 temp.birthYear = atoi(line + 12);
             }
+            else if(strncmp(line, "Active: ", 8)==0){
+                temp.active = atoi(line + 8);
+            }
             else if(strncmp(line, "Type: ", 6) == 0){
                 strcpy(temp.memberType, line + 6);
             }
+
             else if(strncmp(line, "Register Date: ", 15) == 0){
                 int day, month, year;
                 //đọc string theo format
@@ -942,4 +969,18 @@ void groupMemberByTrainerId(struct memberProfile *members, int total){
         }
     }
     printf("Group succesfully\n");
+}
+void autoUpdateActive(struct memberProfile *members, int total){
+    time_t currTime = time(NULL);
+    for(int i = 0; i < total; i++){
+        double deltaTime = currTime - members[i].registerTime;
+        deltaTime /= 86400.0;
+        //dòng lệnh test xem khoảng cách số ngày
+        // printf("%lf\n", deltaTime);
+        if(deltaTime > 30){
+            members[i].active = 0;
+            printf("%s: active = %d\n", members[i].fullName, members[i].active);
+        }
+    }
+    printf("Update successfully\n");
 }
