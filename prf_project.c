@@ -401,7 +401,7 @@ int searchTrainerById(char findId[10], int size, struct trainerProfile trainerLi
 //Hàm này chỉ display 1 member khi dùng search
 void displayMember(int i, struct memberProfile * members){
     struct tm *t = localtime(&members[i].registerTime);
-    printf("%s\t|\t%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
+    printf("%-12s | %-12s | %-18s | %6d | %-10s | %02d/%02d/%04d\n",
                 members[i].memberId,
                 members[i].trainerId,
                 members[i].fullName,
@@ -602,15 +602,15 @@ void displayAllMember(int total, struct memberProfile*members){
         for(int i = 0; i < total; i++){
             // displayAllMember(i, members);
             struct tm *t = localtime(&members[i].registerTime);
-            printf("%s\t|\t%s\t|\t%s\t|\t%d\t|\t%s\t|\t%02d/%02d/%04d\n", 
-                members[i].memberId,
-                members[i].trainerId,
-                members[i].fullName,
-                members[i].birthYear,
-                members[i].memberType,
-                t->tm_mday,
-                t->tm_mon + 1,
-                t->tm_year + 1900);
+            printf("%-10s | %-10s | %-15s | %-6d | %-10s | %02d/%02d/%04d\n",
+                    members[i].memberId,
+                    members[i].trainerId,
+                    members[i].fullName,
+                    members[i].birthYear,
+                    members[i].memberType,
+                    t->tm_mday,
+                    t->tm_mon + 1,
+                    t->tm_year + 1900);
         }
     }
 }
@@ -632,13 +632,13 @@ void displaySearchmenu(){
     printf("1. Search by id\n");
     printf("2. Search by name\n");
 }
-void displayTrainer(int idx, struct trainerProfile trainerList[]){
-    printf("%s\t%s\t%s\t%d\t\t%d\n",
-        trainers[idx].trainerId,
-        trainers[idx].trainerName,
-        trainers[idx].specialty,
-        trainers[idx].monthlyFee,
-        trainers[idx].memberCnt);
+void displayTrainer(int i, struct trainerProfile trainerList[]){
+    printf("%-8s %-10s %-15s %15lld %8d\n",
+        trainers[i].trainerId,
+        trainers[i].trainerName,
+        trainers[i].specialty,
+        trainers[i].monthlyFee,
+        trainers[i].memberCnt);
 }
 void saveDataToFile( struct memberProfile * members, int total){
     char input[30];
@@ -756,6 +756,7 @@ void autoLoadFile(struct memberProfile **members, int *total,
             }
             else if(strncmp(line, "-----------------------", 23) == 0){
                 //kiểm tra có tồn tại thì sẽ cộng
+                // \0 là kí tự kết thúc chuỗi
                 if(temp.trainerId[0] != '\0'){
                     int pos = searchTrainerById(temp.trainerId, numberOfTrainer, trainers);
                     if(pos != -1){
@@ -901,12 +902,12 @@ void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer){
 }
 void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer){
     for(int i =0; i < numberOfTrainer; i++){
-        printf("%s\t\t%s\t\t%d\t\t%d\t\t%lld\n",
-            trainers[i].trainerId,
-            trainers[i].trainerName,
-            trainers[i].memberCnt,
-            trainers[i].monthlyFee,
-            trainers[i].total);
+        printf("%-10s %-15s %8d %15d %15lld\n",
+        trainers[i].trainerId,
+        trainers[i].trainerName,
+        trainers[i].memberCnt,
+        trainers[i].monthlyFee,
+        trainers[i].total);
     }
 }
 void groupMemberByTrainerId(struct memberProfile *members, int total){
