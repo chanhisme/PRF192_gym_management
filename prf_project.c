@@ -674,7 +674,7 @@ void displaySearchmenu(){
     printf("2. Search by name\n");
 }
 void displayTrainer(int i, struct trainerProfile trainerList[]){
-    printf("%-8s %-10s %-15s %15lld %8d\n",
+    printf("%-8s %-10s %-15s %-15d %8d\n",
         trainers[i].trainerId,
         trainers[i].trainerName,
         trainers[i].specialty,
@@ -977,9 +977,9 @@ void autoUpdateActive(struct memberProfile *members, int total){
         deltaTime /= 86400.0;
         //dòng lệnh test xem khoảng cách số ngày
         // printf("%lf\n", deltaTime);
-        if(deltaTime > 30){
+        if(deltaTime > 60){
             members[i].active = 0;
-            printf("%s: active = %d\n", members[i].fullName, members[i].active);
+            printf("%s: active = %d, this member is inactive over 30 days\n", members[i].fullName, members[i].active);
         }
     }
     printf("Update successfully\n");
