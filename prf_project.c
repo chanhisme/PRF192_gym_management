@@ -493,7 +493,7 @@ void addMember(int size, int*total, struct memberProfile **members){
             }
             
         }
-        while(!isValidName(inputName) || worldCouting(inputName) >= 2|| searchMemberByName(inputName, *total, *members) != -1);
+        while(!isValidName(inputName) || worldCouting(inputName) < 2|| searchMemberByName(inputName, *total, *members) != -1);
         strcpy((*members)[idx].fullName, inputName);
         int inputYear;
         //Kiểm tra năm sinh 
@@ -610,8 +610,10 @@ void removeMember(struct memberProfile ** members, int * total){
         }
         struct memberProfile *tmp = 
             realloc(*members, (*total -1) * sizeof(struct memberProfile));
+        if(tmp != NULL){
+            *members = tmp;
+        }
         (*total)--;
-        *members = tmp;
         printf("Remove successfully\n");
     }
     else{
@@ -675,11 +677,11 @@ void displaySearchmenu(){
 }
 void displayTrainer(int i, struct trainerProfile trainerList[]){
     printf("%-8s %-10s %-15s %-15d %8d\n",
-        trainers[i].trainerId,
-        trainers[i].trainerName,
-        trainers[i].specialty,
-        trainers[i].monthlyFee,
-        trainers[i].memberCnt);
+        trainerList[i].trainerId,
+        trainerList[i].trainerName,
+        trainerList[i].specialty,
+        trainerList[i].monthlyFee,
+        trainerList[i].memberCnt);
 }
 void saveDataToFile( struct memberProfile * members, int total){
     char input[30];
@@ -718,7 +720,8 @@ void saveDataToFile( struct memberProfile * members, int total){
     }
 }
 void clearBuffer(){
-    while (getchar() != '\n');
+    int c;
+    while((c = getchar()) != '\n' && c != EOF);
 }
 void autoSaveFile(struct memberProfile * members, int total){
     FILE* fptr = fopen("Gym_Membership_&_Trainer_Management.txt", "w");
@@ -780,7 +783,7 @@ void autoLoadFile(struct memberProfile **members, int *total,
                 strcpy(temp.fullName, line + 6);
             }
             else if(strncmp(line, "Birth Year: ", 12) == 0){
-                //đọc năm dạng chuỗi và đổi về giá int
+                //atoi đọc năm dạng chuỗi và đổi về giá int
                 temp.birthYear = atoi(line + 12);
             }
             else if(strncmp(line, "Active: ", 8)==0){
@@ -943,7 +946,7 @@ void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **memb
 }
 void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer){
     for(int i = 0; i < numberOfTrainer; i++){
-        trainers[i].total += (trainers[i].monthlyFee) * (trainers[i].memberCnt);
+        trainers[i].total = (long long)trainers[i].monthlyFee * trainers[i].memberCnt;
     }
     printf("Calculate successfully\n");
 }
@@ -979,7 +982,8 @@ void autoUpdateActive(struct memberProfile *members, int total){
         // printf("%lf\n", deltaTime);
         if(deltaTime > 60){
             members[i].active = 0;
-            printf("%s: active = %d, this member is inactive over 30 days\n", members[i].fullName, members[i].active);
+            printf("%s has been inactive after 60 days since registration.\n",
+                members[i].fullName);
         }
     }
     printf("Update successfully\n");
