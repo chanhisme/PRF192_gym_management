@@ -316,7 +316,7 @@ int inputSearchChoice(){
     return searchChoice;
 }
 int isValidId(char id[]) {
-    char preFix[4] = "GYM";
+    char preFix[] = "GYM";
     if(strlen(id) >= 10 || strlen(id) == 0){
         return 0;
     }
@@ -366,7 +366,7 @@ int isValidName(char *name) {
         if(i < len -1 && name[i] == ' ' && name[i + 1] == ' '){
             return 0;
         }
-        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+        if(isalnum(c)) {
             hasLetter = 1;
         }
         else if(c == ' ') {
@@ -569,7 +569,7 @@ void sortMemberByBirthYearOlder_to_young(struct memberProfile *members, int tota
 void sortByDateLastest(struct memberProfile * members, int total){
     for(int i = 0; i < total - 1; i++){
         for(int j = 0; j < total - i - 1; j++){
-            if( members[j].registerTime > members[j+1].registerTime ){
+            if( members[j].registerTime < members[j+1].registerTime ){
                 struct memberProfile temp = members[j];
                     members[j] = members[j+1];
                     members[j+1] = temp;
@@ -581,7 +581,7 @@ void sortByDateLastest(struct memberProfile * members, int total){
 void sortByDateOldest(struct memberProfile * members, int total){
     for(int i = 0; i < total - 1; i++){
         for(int j = 0; j < total - i - 1; j++){
-            if( members[j].registerTime < members[j+1].registerTime ){
+            if( members[j].registerTime > members[j+1].registerTime ){
                 struct memberProfile temp = members[j];
                     members[j] = members[j+1];
                     members[j+1] = temp;
@@ -612,8 +612,12 @@ void removeMember(struct memberProfile ** members, int * total){
             realloc(*members, (*total -1) * sizeof(struct memberProfile));
         if(tmp != NULL){
             *members = tmp;
+            (*total)--;
         }
-        (*total)--;
+        else {
+            printf("Memory reallocation failed!\n");
+        }
+        
         printf("Remove successfully\n");
     }
     else{
@@ -756,7 +760,7 @@ void autoSaveFile(struct memberProfile * members, int total){
         fclose(fptr);
     }
 }
-void autoLoadFile(struct memberProfile **members, int *total, 
+void autoLoadFile(struct memberProfile **members, int *total,
     struct trainerProfile *trainers, int numberOfTrainer){
     FILE * fptr = fopen("Gym_Membership_&_Trainer_Management.txt", "r");
     if (!fptr){
@@ -827,10 +831,13 @@ void autoLoadFile(struct memberProfile **members, int *total,
                 (*total)++;
                 memset(&temp, 0, sizeof(temp));
             }
-    }
+        }
     fclose(fptr);
+    }
 }
-}
+
+
+
 void inputString(char str[], int size){
 	fgets(str, size, stdin);
     str[strcspn(str, "\n")] = '\0';
@@ -908,7 +915,7 @@ void loadBinaryFile(){
 }
 void displaySaveMenu(){
 	printf("\n=====SAVE MENU=====\n");
-	printf("1. Binary\n");
+	printf("1.Binary\n");
 	printf("2.Text\n");
 }
 void loadTextFile(){
@@ -939,6 +946,10 @@ void displayAllTrainer(struct trainerProfile *trainers, int numberOfTrainer){
     }
 }
 void assignTrainer(int trainerIndex,int memberIndex, struct memberProfile **members, struct trainerProfile *trainers){
+    if(strlen((*members)[memberIndex].trainerId) != 0){
+        printf("This member already has a trainer\n");
+        return;
+    }
     strcpy((*members)[memberIndex].trainerId, 
     trainers[trainerIndex].trainerId);
     trainers[trainerIndex].memberCnt ++;
@@ -951,18 +962,21 @@ void caculateTotalRevenue(struct trainerProfile *trainers, int numberOfTrainer){
     printf("Calculate successfully\n");
 }
 void displayRevenue(struct trainerProfile *trainer, int numberOfTrainer){
-    for(int i =0; i < numberOfTrainer; i++){
+    for(int i = 0; i < numberOfTrainer; i++){
         printf("%-10s %-15s %8d %15d %15lld\n",
-        trainers[i].trainerId,
-        trainers[i].trainerName,
-        trainers[i].memberCnt,
-        trainers[i].monthlyFee,
-        trainers[i].total);
+            trainer[i].trainerId,
+            trainer[i].trainerName,
+            trainer[i].memberCnt,
+            trainer[i].monthlyFee,
+            trainer[i].total);
     }
 }
 void groupMemberByTrainerId(struct memberProfile *members, int total){
     for(int i = 0; i < total-1; i++){
         for(int j = 0; j < total - 1 - i; j ++){
+            if(strlen(members[j].trainerId) == 0){
+                continue;
+            }
             //để vế trái lớn hơn vế phải thì vế trái trừ vế phải phải ra số dương
             if(strcmp(members[j].trainerId, members[j+1].trainerId) > 0){
                 struct memberProfile tmp = members[j];
