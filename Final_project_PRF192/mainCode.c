@@ -200,13 +200,14 @@ int main(){
     autoSaveFile(members, total);
     free(members);
     members = NULL;
-
+	system("\npause");
     return 0;
 }
 
 
 
 //Prototype
+
 
 
 
