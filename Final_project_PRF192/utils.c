@@ -15,6 +15,7 @@ int isValidId(char id[]) {
         return 0;
     }
     //hàm strncmp sẽ so sánh 2 string như 2 số theo bảng mã ascii
+    //so sánh id có 3 kí tự đầu có giống với preFix ko
     else if(strlen(id) >=3 && strncmp(id, preFix, 3) == 0) {
         return 1; 
     } 
@@ -53,7 +54,7 @@ int isValidName(char *name) {
         if(i < len -1 && name[i] == ' ' && name[i + 1] == ' '){
             return 0;
         }
-        if(isalnum(c)) {
+        if(isalpha(c)) {
             hasLetter = 1;
         }
         else if(c == ' ') {
