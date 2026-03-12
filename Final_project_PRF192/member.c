@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include "member.h"
 #include "utils.h"
+#include "search_sort.h"
+#include "utils.h"
+#include "UI.h"
 void addMember(int size, int*total, struct memberProfile **members){
     struct memberProfile * tmp = realloc(*members, (*total +size) * sizeof(struct memberProfile));
     if(tmp == NULL){
@@ -13,6 +16,7 @@ void addMember(int size, int*total, struct memberProfile **members){
     for(int i = 0; i < size; i++){
         //tạo index mới trong mảng
         int idx = (*total) + i; 
+        (*members)[idx].trainerId[0] = '\0'; 
         char inputID[16];
         //kiểm tra ID
         do{
