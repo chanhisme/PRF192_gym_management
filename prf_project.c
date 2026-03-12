@@ -354,7 +354,7 @@ int worldCouting(char *name){
 int isValidName(char *name) {
     int hasLetter = 0;
     int len = strlen(name);
-
+    int cntSpace = 0;
     if(len == 0) return 0;
     if(name[0] == ' ' || name[len - 1] == ' ') {
         return 0;
@@ -366,16 +366,18 @@ int isValidName(char *name) {
         if(i < len -1 && name[i] == ' ' && name[i + 1] == ' '){
             return 0;
         }
-        if(isalnum(c)) {
+        if(isalpha(c)) {
             hasLetter = 1;
         }
         else if(c == ' ') {
+            cntSpace ++;
             continue;
         }
         else {
             return 0;
         }
     }
+
     return hasLetter;
 }
 int isValidBirthYear(int year) {
@@ -452,6 +454,7 @@ void displayMemberMenu(){
 }
 void addMember(int size, int*total, struct memberProfile **members){
     struct memberProfile * tmp = realloc(*members, (*total +size) * sizeof(struct memberProfile));
+
     if(tmp == NULL){
         printf("Memory allocation failed!\n");
         return;
@@ -460,6 +463,8 @@ void addMember(int size, int*total, struct memberProfile **members){
     for(int i = 0; i < size; i++){
         //tạo index mới trong mảng
         int idx = (*total) + i; 
+        //để ko bị rác trong ô trainerID
+        (*members)[idx].trainerId[0] = '\0'; 
         char inputID[10];
         //kiểm tra ID
         do{
@@ -787,7 +792,8 @@ void autoLoadFile(struct memberProfile **members, int *total,
                 strcpy(temp.fullName, line + 6);
             }
             else if(strncmp(line, "Birth Year: ", 12) == 0){
-                //atoi đọc năm dạng chuỗi và đổi về giá int
+                //atoi đọc năm dạng chuỗi và đổi về giá int, 
+                //đọc từ vị trí 12 tại line nó là con mảng nên line là trỏ vào index 0 của mảng
                 temp.birthYear = atoi(line + 12);
             }
             else if(strncmp(line, "Active: ", 8)==0){
@@ -805,7 +811,7 @@ void autoLoadFile(struct memberProfile **members, int *total,
                 tm_info.tm_mday = day;
                 tm_info.tm_mon = month - 1;
                 tm_info.tm_year = year - 1900;
-                //chuyển từ struct tm về time_t dùng mktime
+                //chuyển từ dạng struct tm về time_t dùng mktime
                 temp.registerTime = mktime(&tm_info);
             }
             else if(strncmp(line, "-----------------------", 23) == 0){
